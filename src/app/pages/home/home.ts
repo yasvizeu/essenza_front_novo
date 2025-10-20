@@ -156,15 +156,19 @@ export class Home implements OnInit, OnDestroy {
     this.isLoadingRecomendados = true;
     this.agendamentosService.getServicosPagosNaoAgendados(this.currentUser.id).subscribe({
       next: (agendamentos: Agendamento[]) => {
+        console.log('🔍 Debug - Agendamentos recebidos:', agendamentos);
         // Extrair IDs dos serviços já agendados/pagos
-        const servicosJaUtilizados = agendamentos.map(ag => ag.servico?.id).filter(id => id);
+        const servicosJaUtilizados = agendamentos.map(ag => ag.servico?.id || ag.servicoId).filter(id => id);
+        console.log('🔍 Debug - Serviços já utilizados:', servicosJaUtilizados);
         
         // Buscar serviços similares (excluindo os já utilizados)
         this.servicosService.getServicos(1, 6).subscribe({
           next: (response: PaginatedResponse<Servico>) => {
+            console.log('🔍 Debug - Serviços disponíveis:', response.data);
             this.servicosRecomendados = response.data
               ?.filter(servico => !servicosJaUtilizados.includes(servico.id))
               .slice(0, 4) || []; // Apenas 4 recomendações
+            console.log('🔍 Debug - Serviços recomendados finais:', this.servicosRecomendados);
             this.isLoadingRecomendados = false;
             this.cdr.detectChanges();
           },
@@ -202,6 +206,7 @@ export class Home implements OnInit, OnDestroy {
       minute: '2-digit'
     });
   }
+
 
   navegarParaAgendamentos(): void {
     this.router.navigate(['/cliente-agendamentos']);

@@ -1,9 +1,27 @@
 // Estilos para a página home
 
+// Garantir que os botões sejam clicáveis
+.btn {
+  position: relative;
+  z-index: 1000;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+// Garantir que a seção hero seja clicável
 .hero-section {
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   position: relative;
+  z-index: 10;
+  pointer-events: auto;
   overflow: hidden;
+  
+  .btn {
+    position: relative;
+    z-index: 1001;
+    pointer-events: auto;
+    cursor: pointer;
+  }
 
   &::before {
     content: '';
