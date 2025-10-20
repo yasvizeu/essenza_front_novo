@@ -1,0 +1,616 @@
+<!-- Hero Section - Personalizado para usuários logados -->
+<div class="hero-section bg-success text-white py-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <h1 class="display-4 fw-bold mb-4">
+          <span *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'">
+            Olá, {{ currentUser?.nome || 'Cliente' }}! 👋
+          </span>
+          <span *ngIf="!isAuthenticated || currentUser?.tipo !== 'cliente'">
+            Bem-vindo à Essenza
+          </span>
+        </h1>
+        <p class="lead mb-4">
+          <span *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'">
+            Que bom ter você de volta! Confira seus próximos agendamentos e descubra novos tratamentos.
+          </span>
+          <span *ngIf="!isAuthenticated || currentUser?.tipo !== 'cliente'">
+            Descubra serviços de estética profissional que transformam sua vida e cuidam da sua beleza.
+          </span>
+        </p>
+        <div class="d-flex gap-3">
+          <button type="button" class="btn btn-light btn-lg" (click)="navegarParaServicos()">
+            <i class="bi bi-arrow-right me-2"></i>
+            Explorar Serviços
+          </button>
+          <button type="button" *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'" class="btn btn-outline-light btn-lg" (click)="navegarParaAgendamentos()">
+            <i class="bi bi-calendar-check me-2"></i>
+            Meus Agendamentos
+          </button>
+          <button type="button" *ngIf="!isAuthenticated || currentUser?.tipo !== 'cliente'" class="btn btn-outline-light btn-lg" (click)="navegarParaSobre()">
+            <i class="bi bi-play-circle me-2"></i>
+            Saiba Mais
+          </button>
+        </div>
+      </div>
+      <div class="col-lg-6 text-center">
+        <i class="bi bi-leaf-fill display-1 text-light opacity-75"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Seção de Agendamentos - Apenas para usuários logados -->
+<div *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'" class="py-5 agendamentos-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-calendar-check me-2 text-success"></i>
+            Meus Próximos Agendamentos
+          </h3>
+          <button class="btn btn-outline-success" (click)="navegarParaAgendamentos()">
+            Ver Todos
+            <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+        
+        <div *ngIf="isLoadingAgendamentos" class="text-center py-4 loading-state">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Carregando...</span>
+          </div>
+          <p class="mt-2 text-muted">Carregando seus agendamentos...</p>
+        </div>
+
+        <div *ngIf="!isLoadingAgendamentos && proximosAgendamentos.length === 0" class="text-center py-5 empty-state">
+          <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+          <h5 class="text-muted">Nenhum agendamento próximo</h5>
+          <p class="text-muted">Que tal agendar um novo tratamento?</p>
+          <button class="btn btn-success" (click)="navegarParaServicos()">
+            <i class="bi bi-plus-circle me-2"></i>
+            Agendar Serviço
+          </button>
+        </div>
+
+        <div *ngIf="!isLoadingAgendamentos && proximosAgendamentos.length > 0" class="row">
+          <div *ngFor="let agendamento of proximosAgendamentos" class="col-md-4 mb-3">
+            <div class="card h-100 agendamento-card border-0 shadow-sm" (click)="verDetalhesAgendamento(agendamento)" style="cursor: pointer;">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h6 class="card-title text-success fw-bold mb-0">{{ agendamento.servico?.nome }}</h6>
+                  <span class="badge bg-success">Confirmado</span>
+                </div>
+                <p class="card-text text-muted small mb-2">
+                  <i class="bi bi-person me-1"></i>
+                  {{ agendamento.profissional?.nome }}
+                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <small class="text-muted d-block">
+                      <i class="bi bi-calendar me-1"></i>
+                      {{ formatarData(agendamento.startDateTime!) }}
+                    </small>
+                    <small class="text-muted">
+                      <i class="bi bi-clock me-1"></i>
+                      {{ formatarHora(agendamento.startDateTime!) }}
+                    </small>
+                  </div>
+                  <div class="text-end">
+                    <small class="text-success fw-bold">
+                      R$ {{ agendamento.servico?.preco | number:'1.2-2' }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Seção de Serviços Recomendados - Apenas para usuários logados -->
+<div *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'" class="py-5 recomendados-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-heart me-2 text-success"></i>
+            Recomendados para Você
+          </h3>
+          <button class="btn btn-outline-success" (click)="navegarParaServicos()">
+            Ver Todos
+            <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+        
+        <div *ngIf="isLoadingRecomendados" class="text-center py-4 loading-state">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Carregando...</span>
+          </div>
+          <p class="mt-2 text-muted">Buscando recomendações personalizadas...</p>
+        </div>
+
+        <div *ngIf="!isLoadingRecomendados && servicosRecomendados.length === 0" class="text-center py-5 empty-state">
+          <i class="bi bi-search display-1 text-muted mb-3"></i>
+          <h5 class="text-muted">Nenhuma recomendação disponível</h5>
+          <p class="text-muted">Explore nossos serviços para receber recomendações personalizadas!</p>
+          <button class="btn btn-success" (click)="navegarParaServicos()">
+            <i class="bi bi-search me-2"></i>
+            Explorar Serviços
+          </button>
+        </div>
+
+        <div *ngIf="!isLoadingRecomendados && servicosRecomendados.length > 0" class="row">
+          <div *ngFor="let servico of servicosRecomendados" class="col-md-3 mb-4">
+            <div class="card h-100 servico-card border-0 shadow-sm" (click)="openModal(servico)">
+              <div class="card-img-top position-relative">
+                <img [src]="getServicoImage(servico)" [alt]="servico.nome" class="img-fluid" style="height: 200px; object-fit: cover;">
+                <div class="position-absolute top-0 end-0 m-2">
+                  <span class="badge bg-success">Recomendado</span>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h6 class="card-title fw-bold text-success mb-2">{{ servico.nome }}</h6>
+                <p class="card-text text-muted small flex-grow-1">{{ servico.descricao }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="h6 text-success mb-0">R$ {{ servico.preco | number:'1.2-2' }}</span>
+                  <button class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Carrossel de Serviços de Estética -->
+<section class="py-5">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-12">
+        <h2 class="display-6 fw-bold mb-3">
+          <span *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'">
+            Nossos Serviços
+          </span>
+          <span *ngIf="!isAuthenticated || currentUser?.tipo !== 'cliente'">
+            Serviços em Destaque
+          </span>
+        </h2>
+        <p class="lead text-muted">
+          <span *ngIf="isAuthenticated && currentUser?.tipo === 'cliente'">
+            Explore todos os nossos tratamentos disponíveis
+          </span>
+          <span *ngIf="!isAuthenticated || currentUser?.tipo !== 'cliente'">
+            Conheça nossos tratamentos mais populares
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-12">
+        <div id="servicosCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+          <!-- Indicadores -->
+          <div class="carousel-indicators">
+            <button type="button" data-bs-target="#servicosCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#servicosCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#servicosCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            <button type="button" data-bs-target="#servicosCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+            <button type="button" data-bs-target="#servicosCarousel" data-bs-slide-to="4" aria-label="Slide 5"></button>
+          </div>
+
+          <!-- Slides -->
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <div class="carousel-content">
+                <div class="carousel-image">
+                  <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80" alt="Limpeza de Pele">
+                </div>
+                <div class="carousel-text">
+                  <h3 class="fw-bold">Limpeza de Pele Profunda</h3>
+                  <p class="lead">Limpeza completa com extração de cravos e espinhas</p>
+                  <div class="servico-details">
+                    <span class="badge bg-success me-2">R$ 120,00</span>
+                    <span class="badge bg-info">60 min</span>
+                  </div>
+                  <button class="btn btn-light btn-lg mt-3" (click)="openModalFromCarousel(0)">
+                    <i class="bi bi-eye me-2"></i>
+                    Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="carousel-content">
+                <div class="carousel-image">
+                  <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80" alt="Tratamento Anti-idade">
+                </div>
+                <div class="carousel-text">
+                  <h3 class="fw-bold">Tratamento Anti-idade</h3>
+                  <p class="lead">Tratamento com produtos específicos para rugas e linhas de expressão</p>
+                  <div class="servico-details">
+                    <span class="badge bg-success me-2">R$ 180,00</span>
+                    <span class="badge bg-info">90 min</span>
+                  </div>
+                  <button class="btn btn-light btn-lg mt-3" (click)="openModalFromCarousel(1)">
+                    <i class="bi bi-eye me-2"></i>
+                    Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="carousel-content">
+                <div class="carousel-image">
+                  <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80" alt="Hidratação Intensiva">
+                </div>
+                <div class="carousel-text">
+                  <h3 class="fw-bold">Hidratação Intensiva</h3>
+                  <p class="lead">Hidratação profunda com máscaras e séruns</p>
+                  <div class="servico-details">
+                    <span class="badge bg-success me-2">R$ 95,00</span>
+                    <span class="badge bg-info">45 min</span>
+                  </div>
+                  <button class="btn btn-light btn-lg mt-3" (click)="openModalFromCarousel(2)">
+                    <i class="bi bi-eye me-2"></i>
+                    Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="carousel-content">
+                <div class="carousel-image">
+                  <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80" alt="Peeling Químico">
+                </div>
+                <div class="carousel-text">
+                  <h3 class="fw-bold">Peeling Químico</h3>
+                  <p class="lead">Renovação celular com ácidos específicos</p>
+                  <div class="servico-details">
+                    <span class="badge bg-success me-2">R$ 250,00</span>
+                    <span class="badge bg-info">75 min</span>
+                  </div>
+                  <button class="btn btn-light btn-lg mt-3" (click)="openModalFromCarousel(3)">
+                    <i class="bi bi-eye me-2"></i>
+                    Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <div class="carousel-content">
+                <div class="carousel-image">
+                  <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80" alt="Tratamento para Acne">
+                </div>
+                <div class="carousel-text">
+                  <h3 class="fw-bold">Tratamento para Acne</h3>
+                  <p class="lead">Tratamento específico para peles acneicas</p>
+                  <div class="servico-details">
+                    <span class="badge bg-success me-2">R$ 150,00</span>
+                    <span class="badge bg-info">60 min</span>
+                  </div>
+                  <button class="btn btn-light btn-lg mt-3" (click)="openModalFromCarousel(4)">
+                    <i class="bi bi-eye me-2"></i>
+                    Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controles -->
+          <button class="carousel-control-prev" type="button" data-bs-target="#servicosCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#servicosCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Próximo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Seção de Serviços -->
+<section class="py-5">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-12">
+        <h2 class="display-6 fw-bold mb-3">Nossos Serviços de Estética</h2>
+        <p class="lead text-muted">Descubra tratamentos profissionais que transformam sua beleza</p>
+      </div>
+    </div>
+
+    <!-- Skeleton Loading -->
+    <div *ngIf="isLoading" class="row g-4">
+      <div *ngFor="let item of [1,2,3,4,5,6]" class="col-lg-4 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="skeleton-img" style="height: 200px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite;"></div>
+          <div class="card-body d-flex flex-column p-3">
+            <div class="skeleton-text mb-2" style="height: 20px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite;"></div>
+            <div class="skeleton-text mb-2" style="height: 16px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite;"></div>
+            <div class="skeleton-text mb-3" style="height: 14px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite;"></div>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <div class="skeleton-text" style="height: 24px; width: 80px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite;"></div>
+              <div class="skeleton-text" style="height: 36px; width: 120px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards de Serviços -->
+    <div *ngIf="!isLoading" class="row g-4">
+      <div *ngFor="let servico of servicos" class="col-lg-4 col-md-6">
+        <div class="card border-0 shadow-sm h-100 servico-card" (click)="openModal(servico)">
+          <div class="card-img-wrapper">
+            <img 
+              [src]="getServicoImage(servico)" 
+              class="card-img-top" 
+              [alt]="servico.nome" 
+              style="height: 200px; object-fit: cover;"
+              loading="lazy"
+              [attr.data-src]="getServicoImage(servico)"
+              onerror="this.src='assets/images/placeholder-service.jpg'">
+            <div class="card-img-overlay d-flex align-items-end">
+              <div class="w-100">
+                <span class="badge bg-success mb-2">Disponível</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title mb-2">{{ servico.nome }}</h5>
+            <p class="card-text text-muted flex-grow-1">{{ servico.descricao }}</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto">
+              <div>
+                <span class="text-success fw-bold fs-5">{{ formatPrice(servico.preco) }}</span>
+                <div *ngIf="servico.duracao" class="text-muted small">
+                  <i class="bi bi-clock me-1"></i>{{ formatDuration(servico.duracao) }}
+                </div>
+              </div>
+              <button class="btn btn-success">
+                <i class="bi bi-eye me-1"></i>
+                Ver Detalhes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensagem quando não há serviços -->
+    <div *ngIf="!isLoading && servicos.length === 0" class="text-center py-5">
+      <i class="bi bi-inbox display-1 text-muted"></i>
+      <h4 class="mt-3 text-muted">Nenhum serviço disponível</h4>
+      <p class="text-muted">Em breve teremos novos serviços para você!</p>
+    </div>
+
+    <!-- Controles de Paginação -->
+    <div *ngIf="!isLoading && servicos.length > 0 && totalPages > 1" class="d-flex justify-content-center mt-5">
+      <nav aria-label="Paginação de serviços">
+        <ul class="pagination">
+          <li class="page-item" [class.disabled]="!hasPrevPage">
+            <button class="page-link" (click)="prevPage()" [disabled]="!hasPrevPage">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+          </li>
+          
+          <li *ngFor="let page of [].constructor(totalPages); let i = index" 
+              class="page-item" 
+              [class.active]="currentPage === (i + 1)">
+            <button class="page-link" (click)="goToPage(i + 1)">
+              {{ i + 1 }}
+            </button>
+          </li>
+          
+          <li class="page-item" [class.disabled]="!hasNextPage">
+            <button class="page-link" (click)="nextPage()" [disabled]="!hasNextPage">
+              Próxima <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</section>
+
+<!-- Por que escolher a Essenza -->
+<section class="bg-light py-5">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-12">
+        <h2 class="display-6 fw-bold mb-3">Por que escolher a Essenza?</h2>
+        <p class="lead text-muted">Nossos diferenciais que fazem a diferença</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+              <i class="bi bi-leaf text-success fs-1"></i>
+            </div>
+            <h5 class="card-title mb-3">100% Natural</h5>
+            <p class="card-text text-muted">
+              Todos os nossos produtos são feitos com ingredientes naturais, sem conservantes artificiais.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+              <i class="bi bi-recycle text-success fs-1"></i>
+            </div>
+            <h5 class="card-title mb-3">Sustentável</h5>
+            <p class="card-text text-muted">
+              Comprometidos com o meio ambiente, usando embalagens recicláveis e processos eco-friendly.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body text-center p-4">
+            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+              <i class="bi bi-award text-success fs-1"></i>
+            </div>
+            <h5 class="card-title mb-3">Qualidade Premium</h5>
+            <p class="card-text text-muted">
+              Rigoroso controle de qualidade para garantir produtos seguros e eficazes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal Lateral do Serviço -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-sidebar" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4 class="modal-title">{{ selectedServico?.nome }}</h4>
+      <button type="button" class="btn-close" (click)="closeModal()" aria-label="Fechar"></button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="servico-image mb-4">
+        <img [src]="getServicoImage(selectedServico!)" [alt]="selectedServico?.nome" class="img-fluid rounded">
+      </div>
+      
+      <div class="servico-info mb-4">
+        <h5 class="mb-3">Descrição do Serviço</h5>
+        <p class="text-muted">{{ selectedServico?.descricao }}</p>
+        
+        <div class="row mb-3">
+          <div class="col-6">
+            <div class="info-item">
+              <i class="bi bi-currency-dollar text-success"></i>
+              <span class="fw-bold">{{ formatPrice(selectedServico?.preco || 0) }}</span>
+            </div>
+          </div>
+          <div class="col-6" *ngIf="selectedServico?.duracao">
+            <div class="info-item">
+              <i class="bi bi-clock text-success"></i>
+              <span>{{ formatDuration(selectedServico!.duracao!) }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="selectedServico?.categoria" class="mb-3">
+          <span class="badge bg-light text-dark">{{ selectedServico!.categoria }}</span>
+        </div>
+      </div>
+      
+      <div class="quantidade-section mb-4">
+        <h6 class="mb-3">Quantidade</h6>
+        <div class="input-group">
+          <button class="btn btn-outline-secondary" type="button" (click)="decrementQuantity()">
+            <i class="bi bi-dash"></i>
+          </button>
+          <input type="number" class="form-control text-center" [(ngModel)]="quantidade" min="1" max="10">
+          <button class="btn btn-outline-secondary" type="button" (click)="incrementQuantity()">
+            <i class="bi bi-plus"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="total-section mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold">Total:</span>
+          <span class="text-success fw-bold fs-5">{{ formatPrice(calculateTotalPrice(selectedServico, quantidade)) }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary me-2" (click)="closeModal()">
+        Cancelar
+      </button>
+      <button type="button" class="btn btn-success" (click)="addToCart()">
+        <i class="bi bi-cart-plus me-2"></i>
+        Adicionar ao Carrinho
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Detalhes do Agendamento -->
+<div *ngIf="showDetalhesModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-calendar-event me-2"></i>
+          Detalhes do Agendamento
+        </h5>
+        <button type="button" class="btn-close" (click)="closeDetalhesModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedAgendamentoDetalhes">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="text-primary">Informações do Serviço</h6>
+            <p><strong>Serviço:</strong> {{ selectedAgendamentoDetalhes.servico?.nome }}</p>
+            <p><strong>Descrição:</strong> {{ selectedAgendamentoDetalhes.servico?.descricao || 'N/A' }}</p>
+            <p><strong>Valor:</strong> R$ {{ selectedAgendamentoDetalhes.servico?.preco | number:'1.2-2' }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-primary">Data e Horário</h6>
+            <p><strong>Data:</strong> {{ formatarData(selectedAgendamentoDetalhes.startDateTime!) }}</p>
+            <p><strong>Horário:</strong> {{ formatarHora(selectedAgendamentoDetalhes.startDateTime!) }}</p>
+            <p><strong>Duração:</strong> 60 min (estimativa)</p>
+          </div>
+        </div>
+        
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <h6 class="text-primary">Profissional</h6>
+            <p><strong>Nome:</strong> {{ selectedAgendamentoDetalhes.profissional?.nome }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-primary">Status</h6>
+            <span class="badge bg-success me-2">Confirmado</span>
+            <span class="badge bg-success">Pago</span>
+          </div>
+        </div>
+        
+        <div class="row mt-3" *ngIf="selectedAgendamentoDetalhes.observacoes">
+          <div class="col-12">
+            <h6 class="text-primary">Observações</h6>
+            <p class="text-muted">{{ selectedAgendamentoDetalhes.observacoes }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDetalhesModal()">
+          <i class="bi bi-x-circle me-1"></i>
+          Fechar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="navegarParaAgendamentos()">
+          <i class="bi bi-calendar-check me-1"></i>
+          Ver Todos os Agendamentos
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

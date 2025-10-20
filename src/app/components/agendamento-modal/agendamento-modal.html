@@ -1,0 +1,138 @@
+<!-- Modal de Agendamento de Serviço -->
+<div *ngIf="isOpen" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header do Modal -->
+    <div class="modal-header">
+      <h4 class="modal-title">
+        <i class="bi bi-calendar-plus me-2" *ngIf="!isEditMode"></i>
+        <i class="bi bi-pencil me-2" *ngIf="isEditMode"></i>
+        {{ isEditMode ? 'Editar' : 'Agendar' }} {{ servicoNome }}
+      </h4>
+      <button type="button" class="btn-close" (click)="closeModal()" aria-label="Fechar">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <!-- Body do Modal -->
+    <div class="modal-body">
+      <!-- Informações do Serviço -->
+      <div class="servico-info mb-4">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h5 class="mb-2">{{ servicoNome }}</h5>
+            <p class="text-muted mb-2">{{ servicoDescricao }}</p>
+            <div class="d-flex gap-3">
+              <span class="badge bg-success">
+                <i class="bi bi-currency-dollar me-1"></i>
+                {{ formatarPreco(servicoPreco) }}
+              </span>
+              <span class="badge bg-info">
+                <i class="bi bi-clock me-1"></i>
+                {{ formatarDuracao(servicoDuracao) }}
+              </span>
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            <div class="servico-image">
+              <img [src]="servico?.imagem || 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80'" 
+                   [alt]="servicoNome" 
+                   class="img-fluid rounded">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário de Agendamento -->
+      <div class="formulario-agendamento mb-4">
+        <div class="row justify-content-center">
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title text-center mb-4">
+                  <i class="bi bi-calendar-event me-2"></i>
+                  Escolha Data e Horário
+                </h5>
+                
+                <form>
+                  <div class="row g-3">
+                    <!-- Seleção de Data -->
+                    <div class="col-md-6">
+                      <label for="dataAgendamento" class="form-label">Data do Agendamento</label>
+                      <input type="date" 
+                             class="form-control" 
+                             id="dataAgendamento"
+                             [min]="getMinDate()"
+                             [(ngModel)]="dataSelecionada"
+                             name="dataAgendamento">
+                    </div>
+                    
+                    <!-- Seleção de Horário -->
+                    <div class="col-md-6">
+                      <label for="horarioAgendamento" class="form-label">Horário</label>
+                      <select class="form-select" 
+                              id="horarioAgendamento"
+                              [(ngModel)]="horarioSelecionado"
+                              name="horarioAgendamento">
+                        <option value="">Selecione um horário</option>
+                        <option *ngFor="let horario of horariosDisponiveis" [value]="horario">
+                          {{ horario }}
+                        </option>
+                      </select>
+                    </div>
+                    
+                    <!-- Seleção de Profissional -->
+                    <div class="col-12">
+                      <label for="profissionalAgendamento" class="form-label">Profissional</label>
+                      <select class="form-select" 
+                              id="profissionalAgendamento"
+                              [(ngModel)]="profissionalSelecionado"
+                              name="profissionalAgendamento">
+                        <option value="">Selecione um profissional</option>
+                        <option *ngFor="let profissional of profissionaisDisponiveis" [value]="profissional.id">
+                          {{ profissional.nome }}
+                        </option>
+                      </select>
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div class="col-12">
+                      <label for="observacoes" class="form-label">Observações (opcional)</label>
+                      <textarea class="form-control" 
+                                id="observacoes"
+                                rows="3"
+                                [(ngModel)]="observacoes"
+                                name="observacoes"
+                                placeholder="Alguma observação especial para o seu agendamento?"></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensagem de Erro -->
+      <div *ngIf="hasError" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <!-- Footer do Modal -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeModal()">
+        <i class="bi bi-x-circle me-2"></i>
+        Cancelar
+      </button>
+      <button type="button" 
+              class="btn btn-primary"
+              [disabled]="!podeAgendar()"
+              (click)="confirmarAgendamento()">
+        <i class="bi bi-calendar-check me-2" *ngIf="!isEditMode"></i>
+        <i class="bi bi-check-circle me-2" *ngIf="isEditMode"></i>
+        {{ isEditMode ? 'Salvar Alterações' : 'Confirmar Agendamento' }}
+      </button>
+    </div>
+  </div>
+</div>
