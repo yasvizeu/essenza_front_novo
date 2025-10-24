@@ -386,21 +386,49 @@ export class MockBackendService {
 
   getServicosPagosNaoAgendados(clienteId: number): Observable<any[]> {
     console.log('🔧 MockBackend - Get serviços pagos não agendados:', clienteId);
+    console.log('🔧 MockBackend - Agendamentos disponíveis:', this.agendamentos);
+    console.log('🔧 MockBackend - Total de agendamentos:', this.agendamentos.length);
     
     // Simular serviços pagos não agendados (status tentative)
-    const servicosPagos = this.agendamentos
-      .filter(a => a.clienteId === clienteId && a.status === 'tentative')
-      .map(a => ({
+    const agendamentosFiltrados = this.agendamentos.filter(a => {
+      console.log('🔧 MockBackend - Verificando agendamento:', {
+        id: a.id,
+        clienteId: a.clienteId,
+        status: a.status,
+        statusPagamento: a.statusPagamento,
+        servico: a.servico
+      });
+      return a.clienteId === clienteId && a.status === 'tentative' && a.statusPagamento === 'pago';
+    });
+    
+    console.log('🔧 MockBackend - Agendamentos filtrados:', agendamentosFiltrados);
+    
+    const servicosPagos = agendamentosFiltrados.map(a => {
+      console.log('🔧 MockBackend - Processando agendamento tentative:', a);
+      console.log('🔧 MockBackend - servicoId do agendamento:', a.servicoId);
+      console.log('🔧 MockBackend - Serviços disponíveis:', this.servicos.map(s => ({ id: s.id, nome: s.nome })));
+      
+      // Buscar o serviço real pelo servicoId
+      const servicoReal = this.servicos.find(s => s.id === a.servicoId);
+      console.log('🔧 MockBackend - Serviço real encontrado:', servicoReal);
+      
+      const servicoFinal = {
         id: a.id,
         agendamentoId: a.id,
-        nome: a.servico?.nome || 'Serviço',
-        descricao: a.servico?.descricao || 'Descrição',
-        preco: a.servico?.preco || 0,
-        duracao: 60,
-        categoria: 'Serviço',
-        imagem: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-      }));
+        nome: servicoReal?.nome || a.servico?.nome || a.title || 'Serviço',
+        descricao: servicoReal?.descricao || a.servico?.descricao || a.description || 'Descrição',
+        preco: servicoReal?.preco || a.servico?.preco || a.valor || 0,
+        duracao: servicoReal?.duracao || 60,
+        categoria: servicoReal?.categoria || 'Serviço',
+        imagem: servicoReal?.imagem || 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
+      };
+      
+      console.log('🔧 MockBackend - Serviço final processado:', servicoFinal);
+      return servicoFinal;
+    });
 
+    console.log('🔧 MockBackend - Serviços pagos filtrados:', servicosPagos);
+    console.log('🔧 MockBackend - Quantidade de serviços pagos:', servicosPagos.length);
     return of(servicosPagos).pipe(delay(300));
   }
 
@@ -447,18 +475,27 @@ export class MockBackendService {
     
     const novoId = Math.max(...this.agendamentos.map(a => a.id)) + 1;
 
+    // Buscar o serviço completo
+    const servicoCompleto = this.servicos.find(s => s.id === agendamento.servicoId);
+    console.log('🔧 MockBackend - Serviço completo encontrado para agendamento:', servicoCompleto);
+    
     const novoAgendamento: MockAgendamento = {
       id: novoId,
       startDateTime: agendamento.startDateTime,
       endDateTime: agendamento.endDateTime,
       timeZone: 'America/Sao_Paulo',
-      status: agendamento.status || 'confirmed',
+      status: agendamento.status || 'tentative', // Mudança: padrão é tentative para serviços pagos
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       servicoId: agendamento.servicoId,
       clienteId: agendamento.clienteId,
       profissionalId: agendamento.profissionalId,
-      servico: this.servicos.find(s => s.id === agendamento.servicoId),
+      servico: servicoCompleto ? {
+        id: servicoCompleto.id,
+        nome: servicoCompleto.nome,
+        descricao: servicoCompleto.descricao,
+        preco: servicoCompleto.preco
+      } : undefined,
       cliente: (() => {
         const cliente = this.usuarios.find(u => u.id === agendamento.clienteId);
         return cliente ? {
@@ -470,7 +507,10 @@ export class MockBackendService {
       })(),
       profissional: this.usuarios.find(u => u.id === agendamento.profissionalId),
       statusPagamento: agendamento.statusPagamento || 'pago',
-      observacoes: agendamento.observacoes || ''
+      observacoes: agendamento.observacoes || '',
+      title: agendamento.title || servicoCompleto?.nome || 'Serviço',
+      description: agendamento.description || servicoCompleto?.descricao || 'Descrição',
+      valor: agendamento.valor || servicoCompleto?.preco || 0
     };
 
     this.agendamentos.push(novoAgendamento);
@@ -494,17 +534,25 @@ export class MockBackendService {
 
   confirmarAgendamentoPago(id: string | number, startDateTime: string, endDateTime: string, profissionalId: number): Observable<MockAgendamento> {
     console.log('🔧 MockBackend - Confirmar agendamento pago:', id);
+    console.log('🔧 MockBackend - Parâmetros:', { startDateTime, endDateTime, profissionalId });
+    console.log('🔧 MockBackend - Agendamentos antes da confirmação:', this.agendamentos.map(a => ({ id: a.id, status: a.status, servicoId: a.servicoId })));
     
     const agendamento = this.agendamentos.find(a => a.id === parseInt(id.toString()));
     if (!agendamento) {
+      console.log('🔧 MockBackend - Agendamento não encontrado para ID:', id);
       return throwError(() => ({ status: 404, error: { message: 'Agendamento não encontrado' } }));
     }
 
+    console.log('🔧 MockBackend - Agendamento encontrado antes da confirmação:', agendamento);
+    
     agendamento.startDateTime = startDateTime;
     agendamento.endDateTime = endDateTime;
     agendamento.profissionalId = profissionalId;
     agendamento.status = 'confirmed';
     agendamento.updatedAt = new Date().toISOString();
+    
+    console.log('🔧 MockBackend - Agendamento após confirmação:', agendamento);
+    console.log('🔧 MockBackend - Agendamentos após confirmação:', this.agendamentos.map(a => ({ id: a.id, status: a.status, servicoId: a.servicoId })));
     
     return of(agendamento).pipe(delay(300));
   }

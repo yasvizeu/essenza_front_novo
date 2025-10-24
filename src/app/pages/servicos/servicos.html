@@ -140,7 +140,7 @@
 <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
   <div class="modal-sidebar" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4 class="modal-title">{{ selectedServico?.nome }}</h4>
+      <h4 class="modal-title">{{ selectedServico?.nome || 'Nome não disponível' }}</h4>
       <button type="button" class="btn-close" (click)="closeModal()" aria-label="Fechar"></button>
     </div>
     

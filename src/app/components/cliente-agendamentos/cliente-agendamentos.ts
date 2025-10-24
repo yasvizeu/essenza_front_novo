@@ -49,13 +49,18 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.log('🔍 Debug - ngOnInit do ClienteAgendamentosComponent');
+    
     // Verificar se o usuário está autenticado
     if (!this.authService.isAuthenticated() || !this.authService.isCliente()) {
+      console.log('🔍 Debug - Usuário não autenticado ou não é cliente');
       this.router.navigate(['/login']);
       return;
     }
 
     this.currentUser = this.authService.getCurrentUser();
+    console.log('🔍 Debug - Usuário carregado:', this.currentUser);
+    
     this.loadAgendamentos();
     this.loadServicosPagos();
   }
@@ -120,13 +125,17 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
   }
 
   loadServicosPagos(): void {
+    console.log('🔍 Debug - ===== INÍCIO loadServicosPagos =====');
     console.log('🔍 Debug - Carregando serviços pagos não agendados via API');
+    console.log('🔍 Debug - Usuário atual:', this.currentUser);
     
     if (!this.currentUser?.id) {
       console.log('🔍 Debug - Usuário não encontrado para carregar serviços pagos');
       return;
     }
 
+    console.log('🔍 Debug - Fazendo chamada para getServicosPagosNaoAgendados com ID:', this.currentUser.id);
+    
     // Buscar agendamentos tentative com statusPagamento pago via API
     this.agendamentosService.getServicosPagosNaoAgendados(this.currentUser.id).subscribe({
       next: (agendamentos: any) => {
@@ -147,10 +156,12 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
         
         console.log('🔍 Debug - Serviços pagos processados:', this.servicosPagos);
         console.log('🔍 Debug - Quantidade de serviços pagos na interface:', this.servicosPagos.length);
+        console.log('🔍 Debug - ===== FIM loadServicosPagos (sucesso) =====');
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('🔍 Debug - Erro ao carregar serviços pagos:', error);
+        console.log('🔍 Debug - ===== FIM loadServicosPagos (erro) =====');
         this.servicosPagos = [];
         this.cdr.detectChanges();
       }
@@ -341,18 +352,14 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
         next: (agendamentoConfirmado) => {
           console.log('🔍 Debug - Agendamento pago confirmado:', agendamentoConfirmado);
           this.showSuccessMessage('Agendamento confirmado com sucesso!');
+          
           // Remover imediatamente o card do serviço pago da seção amarela
           this.servicosPagos = this.servicosPagos.filter((s: any) => s.agendamentoId !== agendamentoId);
-          // Adicionar de forma otimista aos confirmados
-          if (agendamentoConfirmado) {
-            this.agendamentosConfirmados = [agendamentoConfirmado as any, ...this.agendamentosConfirmados];
-            // Atualizar fonte única e reclassificar para refletir no template
-            this.agendamentos = [agendamentoConfirmado as any, ...this.agendamentos];
-            this.classificarAgendamentos();
-            this.cdr.detectChanges();
-          }
-          // Sincronizar com backend
-          this.recarregarDados();
+          console.log('🔍 Debug - Serviços pagos após remoção:', this.servicosPagos.length);
+          
+          // Recarregar todos os dados para garantir sincronização
+          this.loadAgendamentos();
+          this.loadServicosPagos();
         },
         error: (error) => {
           console.error('🔍 Debug - Erro ao confirmar agendamento pago:', error);
@@ -556,7 +563,15 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
     this.agendamentosConfirmados = [];
     this.agendamentosHistorico = [];
     
+    console.log('🔍 Debug - Classificando agendamentos:', this.agendamentos.length);
+    
     this.agendamentos.forEach(agendamento => {
+      console.log('🔍 Debug - Processando agendamento:', {
+        id: agendamento.id,
+        status: agendamento.status,
+        statusPagamento: agendamento.statusPagamento,
+        servicoNome: agendamento.servico?.nome || agendamento.title
+      });
       const dataAgendamento = this.getAgendamentoDateTime(agendamento);
       
       // Agendamentos confirmados (futuros com data/hora definida)
@@ -571,6 +586,8 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
           this.agendamentosHistorico.push(agendamento);
         }
       }
+      // Agendamentos tentative (serviços pagos não agendados) - NÃO vão mais para confirmados
+      // Eles ficam apenas na seção "Serviços Pagos - Aguardando Agendamento"
       // Histórico (passados, cancelados, completados)
       else if (
         agendamento.status === 'cancelled' || 
@@ -599,6 +616,12 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
     
     console.log('🔍 Debug - Agendamentos confirmados:', this.agendamentosConfirmados.length);
     console.log('🔍 Debug - Agendamentos histórico:', this.agendamentosHistorico.length);
+    console.log('🔍 Debug - Lista de confirmados:', this.agendamentosConfirmados.map(a => ({
+      id: a.id,
+      nome: a.servico?.nome || a.title,
+      status: a.status,
+      statusPagamento: a.statusPagamento
+    })));
   }
 
 

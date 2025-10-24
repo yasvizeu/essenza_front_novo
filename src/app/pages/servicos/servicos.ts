@@ -32,9 +32,9 @@ export class ServicosComponent implements OnInit, OnDestroy {
   categoriaSelecionada = '';
   categorias = [
     { value: '', label: 'Todos os Serviços', icon: 'bi-grid' },
-    { value: 'facial', label: 'Facial', icon: 'bi-face-smile' },
-    { value: 'corporal', label: 'Corporal', icon: 'bi-person' },
-    { value: 'massagem', label: 'Massagem Relaxante', icon: 'bi-heart' }
+    { value: 'Facial', label: 'Facial', icon: 'bi-face-smile' },
+    { value: 'Corporal', label: 'Corporal', icon: 'bi-person' },
+    { value: 'Massagem', label: 'Massagem Relaxante', icon: 'bi-heart' }
   ];
 
   constructor(
@@ -100,10 +100,20 @@ export class ServicosComponent implements OnInit, OnDestroy {
   }
 
   openModal(servico: Servico): void {
+    console.log('🔍 Debug - Abrindo modal para serviço:', servico);
+    console.log('🔍 Debug - Nome do serviço:', servico?.nome);
+    
+    // Verificar se o serviço é válido
+    if (!servico || !servico.nome) {
+      console.error('❌ Erro - Serviço inválido:', servico);
+      return;
+    }
+    
     this.selectedServico = servico;
     this.quantidade = 1;
     this.showModal = true;
     document.body.classList.add('modal-open');
+    console.log('🔍 Debug - selectedServico.nome:', this.selectedServico?.nome);
   }
 
   closeModal(): void {

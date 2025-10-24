@@ -115,6 +115,7 @@ export class MockHttpInterceptor implements HttpInterceptor {
       response$ = this.mockBackend.getAgendamentosProfissional(id);
     } else if (url.match(/\/agendamentos\/servicos-pagos\/\d+$/) && method === 'GET') {
       const id = parseInt(url.split('/').pop() || '0');
+      console.log('🔧 MockInterceptor - Interceptando chamada para serviços pagos:', url, 'ID:', id);
       response$ = this.mockBackend.getServicosPagosNaoAgendados(id);
     } else if (url.includes('/agendamentos') && method === 'POST') {
       response$ = this.mockBackend.criarAgendamentoCompleto(body);

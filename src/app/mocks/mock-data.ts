@@ -60,6 +60,9 @@ export interface MockAgendamento {
   profissional?: { id: number; nome: string; email: string };
   statusPagamento?: 'pendente' | 'pago' | 'cancelado';
   observacoes?: string;
+  title?: string;
+  description?: string;
+  valor?: number;
 }
 
 export interface MockFichaAnamnese {

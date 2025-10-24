@@ -191,11 +191,22 @@ export class ClienteHomeComponent implements OnInit, OnDestroy {
 
   openModal(servico: Servico): void {
     console.log('🔍 Debug - Abrindo modal para serviço:', servico);
+    console.log('🔍 Debug - Nome do serviço:', servico?.nome);
+    console.log('🔍 Debug - Serviço completo:', JSON.stringify(servico));
+    
+    // Verificar se o serviço é válido
+    if (!servico || !servico.nome) {
+      console.error('❌ Erro - Serviço inválido:', servico);
+      return;
+    }
+    
     this.selectedServico = servico;
     this.quantidade = 1;
     this.showModal = true;
     document.body.classList.add('modal-open');
     console.log('🔍 Debug - showModal:', this.showModal);
+    console.log('🔍 Debug - selectedServico após atribuição:', this.selectedServico);
+    console.log('🔍 Debug - selectedServico.nome:', this.selectedServico?.nome);
   }
 
   closeModal(): void {
@@ -510,5 +521,103 @@ export class ClienteHomeComponent implements OnInit, OnDestroy {
         notification.parentNode.removeChild(notification);
       }
     }, 3000);
+  }
+
+  // Carregar histórico de compras do cliente
+  private loadHistoricoCompras(): void {
+    if (!this.currentUser?.id) return;
+
+    // Simular histórico de compras baseado nos agendamentos
+    this.agendamentosService.getAgendamentosCliente(this.currentUser.id).subscribe({
+      next: (agendamentos) => {
+        // Converter agendamentos em histórico de compras
+        this.historicoCompras = agendamentos
+          .filter(ag => ag.statusPagamento === 'pago')
+          .map(ag => ({
+            servicoId: ag.servicoId,
+            servicoNome: ag.servico?.nome || ag.title,
+            categoria: (ag.servico as any)?.categoria || this.getCategoriaPorServico(ag.servico?.nome || ag.title || ''),
+            dataCompra: ag.createdAt || ag.startDateTime,
+            preco: ag.valor || (ag.servico as any)?.preco || 0
+          }));
+        
+        console.log('🔍 Debug - Histórico de compras carregado:', this.historicoCompras);
+      },
+      error: (error) => {
+        console.error('Erro ao carregar histórico de compras:', error);
+        this.historicoCompras = [];
+      }
+    });
+  }
+
+  // Gerar recomendações baseadas no histórico de compras
+  private gerarRecomendacoes(): void {
+    if (this.historicoCompras.length === 0) {
+      this.servicosRecomendados = [];
+      return;
+    }
+
+    // Obter categorias mais compradas
+    const categoriasFrequentes = this.getCategoriasFrequentes();
+    console.log('🔍 Debug - Categorias frequentes:', categoriasFrequentes);
+
+    // Filtrar serviços por categorias mais compradas
+    this.servicosRecomendados = this.servicos.filter(servico => {
+      return categoriasFrequentes.includes(servico.categoria || '');
+    }).slice(0, 6); // Limitar a 6 recomendações
+
+    console.log('🔍 Debug - Serviços recomendados:', this.servicosRecomendados);
+  }
+
+  // Obter categorias mais frequentes no histórico
+  private getCategoriasFrequentes(): string[] {
+    const categoriaCount: { [key: string]: number } = {};
+    
+    this.historicoCompras.forEach(compra => {
+      const categoria = compra.categoria;
+      if (categoria) {
+        categoriaCount[categoria] = (categoriaCount[categoria] || 0) + 1;
+      }
+    });
+
+    // Ordenar por frequência e retornar as top 2
+    return Object.entries(categoriaCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 2)
+      .map(([categoria]) => categoria);
+  }
+
+  // Mapear nome do serviço para categoria (fallback)
+  private getCategoriaPorServico(nomeServico: string): string {
+    const nome = nomeServico?.toLowerCase() || '';
+    
+    if (nome.includes('facial') || nome.includes('pele') || nome.includes('peeling') || nome.includes('hidratação')) {
+      return 'Facial';
+    } else if (nome.includes('massagem') || nome.includes('relaxante') || nome.includes('desportiva') || nome.includes('reflexologia')) {
+      return 'Massagem';
+    } else if (nome.includes('corporal') || nome.includes('drenagem') || nome.includes('esfoliação')) {
+      return 'Corporal';
+    }
+    
+    return 'Outros';
+  }
+
+  // Verificar se cliente tem histórico de compras
+  temHistoricoCompras(): boolean {
+    return this.historicoCompras.length > 0;
+  }
+
+  // Obter mensagem de recomendação
+  getMensagemRecomendacao(): string {
+    if (!this.temHistoricoCompras()) {
+      return 'Ainda não conhecemos o seu gosto o suficiente para saber o que recomendar para você. Explore nossos serviços e faça sua primeira compra!';
+    }
+    
+    const categorias = this.getCategoriasFrequentes();
+    if (categorias.length > 0) {
+      return `Baseado no seu histórico, recomendamos serviços de ${categorias.join(' e ')}.`;
+    }
+    
+    return 'Recomendações personalizadas para você!';
   }
 }

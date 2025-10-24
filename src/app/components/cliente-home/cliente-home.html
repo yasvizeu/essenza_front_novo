@@ -192,18 +192,21 @@
         <div class="card-header bg-white border-0">
           <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">
-              <i class="bi bi-heart text-danger me-2"></i>
-              Seus Serviços Favoritos
+              <i class="bi bi-star text-warning me-2"></i>
+              Recomendados para Você
             </h5>
           <button class="btn btn-outline-primary btn-sm" (click)="loadServicos()">
             Ver Todos os Serviços
           </button>
-          <button class="btn btn-outline-warning btn-sm ms-2" (click)="testModal()">
-            Testar Modal
-          </button>
           </div>
         </div>
         <div class="card-body">
+          <!-- Mensagem de recomendação -->
+          <div class="alert alert-info mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ getMensagemRecomendacao() }}
+          </div>
+
           <div *ngIf="isLoading" class="text-center py-4">
             <div class="spinner-border text-primary" role="status">
               <span class="visually-hidden">Carregando...</span>
@@ -211,20 +214,26 @@
             <p class="mt-3 text-muted">Carregando serviços...</p>
           </div>
           
-          <div *ngIf="!isLoading && servicosFavoritos.length === 0" class="text-center py-4">
-            <i class="bi bi-heart display-4 text-muted"></i>
-            <p class="text-muted mt-2">Nenhum serviço favorito ainda</p>
-            <p class="text-muted small">Explore nossos serviços e adicione aos favoritos!</p>
+          <!-- Sem histórico de compras -->
+          <div *ngIf="!isLoading && !temHistoricoCompras()" class="text-center py-4">
+            <i class="bi bi-search display-4 text-muted"></i>
+            <h4 class="mt-3 text-muted">Descubra nossos serviços</h4>
+            <p class="text-muted">Faça sua primeira compra para receber recomendações personalizadas!</p>
+            <button class="btn btn-success" (click)="scrollToServicos()">
+              <i class="bi bi-cart-plus me-1"></i>
+              Explorar Serviços
+            </button>
           </div>
 
-          <div *ngIf="!isLoading && servicosFavoritos.length > 0" class="row g-3">
-            <div *ngFor="let servico of servicosFavoritos" class="col-lg-4 col-md-6">
+          <!-- Com recomendações -->
+          <div *ngIf="!isLoading && temHistoricoCompras() && servicosRecomendados.length > 0" class="row g-3">
+            <div *ngFor="let servico of servicosRecomendados" class="col-lg-4 col-md-6">
               <div class="card border-0 shadow-sm h-100 servico-card" (click)="openModal(servico)">
                 <div class="card-img-wrapper">
                   <img [src]="getServicoImage(servico)" class="card-img-top" [alt]="servico.nome" style="height: 150px; object-fit: cover;">
                   <div class="card-img-overlay d-flex align-items-end">
                     <div class="w-100">
-                      <span class="badge bg-success mb-2">Favorito</span>
+                      <span class="badge bg-warning mb-2">Recomendado</span>
                     </div>
                   </div>
                 </div>
@@ -238,14 +247,25 @@
                         <i class="bi bi-clock me-1"></i>{{ formatDuration(servico.duracao) }}
                       </div>
                     </div>
-                    <button class="btn btn-success btn-sm">
-                      <i class="bi bi-eye me-1"></i>
-                      Ver
+                    <button class="btn btn-primary btn-sm" (click)="openModal(servico); $event.stopPropagation()">
+                      <i class="bi bi-cart-plus me-1"></i>
+                      Adicionar
                     </button>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Sem recomendações mas com histórico -->
+          <div *ngIf="!isLoading && temHistoricoCompras() && servicosRecomendados.length === 0" class="text-center py-4">
+            <i class="bi bi-star display-4 text-muted"></i>
+            <h4 class="mt-3 text-muted">Analisando suas preferências</h4>
+            <p class="text-muted">Estamos processando seu histórico para gerar recomendações personalizadas.</p>
+            <button class="btn btn-primary" (click)="loadServicos()">
+              <i class="bi bi-grid me-1"></i>
+              Ver Todos os Serviços
+            </button>
           </div>
         </div>
       </div>
@@ -297,9 +317,9 @@
                         <i class="bi bi-clock me-1"></i>{{ formatDuration(servico.duracao) }}
                       </div>
                     </div>
-                    <button class="btn btn-success btn-sm">
-                      <i class="bi bi-eye me-1"></i>
-                      Ver
+                    <button class="btn btn-primary btn-sm" (click)="openModal(servico); $event.stopPropagation()">
+                      <i class="bi bi-cart-plus me-1"></i>
+                      Adicionar
                     </button>
                   </div>
                 </div>
@@ -321,7 +341,7 @@
 <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
   <div class="modal-sidebar" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h4 class="modal-title">{{ selectedServico?.nome }}</h4>
+      <h4 class="modal-title">{{ selectedServico?.nome || 'Nome não disponível' }}</h4>
       <button type="button" class="btn-close" (click)="closeModal()" aria-label="Fechar"></button>
     </div>
     
