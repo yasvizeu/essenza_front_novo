@@ -5,11 +5,9 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:essenza_front": "node dist/essenza_front/server/server.mjs",
-    "vercel-build": "ng build --configuration production"
+    "serve:ssr:essenza_front": "node dist/essenza_front/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,
