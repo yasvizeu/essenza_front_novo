@@ -385,32 +385,31 @@ export class MockBackendService {
   }
 
   getServicosPagosNaoAgendados(clienteId: number): Observable<any[]> {
-    console.log('🔧 MockBackend - Get serviços pagos não agendados:', clienteId);
-    console.log('🔧 MockBackend - Agendamentos disponíveis:', this.agendamentos);
+    console.log('🔧 MockBackend - ===== INÍCIO getServicosPagosNaoAgendados =====');
+    console.log('🔧 MockBackend - Cliente ID:', clienteId);
     console.log('🔧 MockBackend - Total de agendamentos:', this.agendamentos.length);
+    console.log('🔧 MockBackend - Agendamentos completos:', this.agendamentos);
     
     // Simular serviços pagos não agendados (status tentative)
     const agendamentosFiltrados = this.agendamentos.filter(a => {
-      console.log('🔧 MockBackend - Verificando agendamento:', {
-        id: a.id,
+      const match = a.clienteId === clienteId && a.status === 'tentative' && a.statusPagamento === 'pago';
+      console.log('🔧 MockBackend - Agendamento ID', a.id, 'match:', match, {
         clienteId: a.clienteId,
         status: a.status,
-        statusPagamento: a.statusPagamento,
-        servico: a.servico
+        statusPagamento: a.statusPagamento
       });
-      return a.clienteId === clienteId && a.status === 'tentative' && a.statusPagamento === 'pago';
+      return match;
     });
     
+    console.log('🔧 MockBackend - Agendamentos filtrados encontrados:', agendamentosFiltrados.length);
     console.log('🔧 MockBackend - Agendamentos filtrados:', agendamentosFiltrados);
     
     const servicosPagos = agendamentosFiltrados.map(a => {
-      console.log('🔧 MockBackend - Processando agendamento tentative:', a);
-      console.log('🔧 MockBackend - servicoId do agendamento:', a.servicoId);
-      console.log('🔧 MockBackend - Serviços disponíveis:', this.servicos.map(s => ({ id: s.id, nome: s.nome })));
+      console.log('🔧 MockBackend - Processando agendamento ID:', a.id);
       
       // Buscar o serviço real pelo servicoId
       const servicoReal = this.servicos.find(s => s.id === a.servicoId);
-      console.log('🔧 MockBackend - Serviço real encontrado:', servicoReal);
+      console.log('🔧 MockBackend - Serviço real encontrado para servicoId', a.servicoId, ':', servicoReal);
       
       const servicoFinal = {
         id: a.id,
@@ -427,8 +426,9 @@ export class MockBackendService {
       return servicoFinal;
     });
 
-    console.log('🔧 MockBackend - Serviços pagos filtrados:', servicosPagos);
+    console.log('🔧 MockBackend - RESULTADO FINAL - Serviços pagos:', servicosPagos);
     console.log('🔧 MockBackend - Quantidade de serviços pagos:', servicosPagos.length);
+    console.log('🔧 MockBackend - ===== FIM getServicosPagosNaoAgendados =====');
     return of(servicosPagos).pipe(delay(300));
   }
 

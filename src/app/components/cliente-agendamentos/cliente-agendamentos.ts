@@ -49,6 +49,7 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.log('🔍 Debug - ===== INÍCIO ngOnInit =====');
     console.log('🔍 Debug - ngOnInit do ClienteAgendamentosComponent');
     
     // Verificar se o usuário está autenticado
@@ -60,9 +61,15 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
 
     this.currentUser = this.authService.getCurrentUser();
     console.log('🔍 Debug - Usuário carregado:', this.currentUser);
+    console.log('🔍 Debug - ID do usuário:', this.currentUser?.id);
     
+    console.log('🔍 Debug - Chamando loadAgendamentos...');
     this.loadAgendamentos();
+    
+    console.log('🔍 Debug - Chamando loadServicosPagos...');
     this.loadServicosPagos();
+    
+    console.log('🔍 Debug - ===== FIM ngOnInit =====');
   }
 
   ngOnDestroy(): void {
@@ -140,6 +147,17 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
     this.agendamentosService.getServicosPagosNaoAgendados(this.currentUser.id).subscribe({
       next: (agendamentos: any) => {
         console.log('🔍 Debug - Agendamentos tentative pagos recebidos da API:', agendamentos);
+        console.log('🔍 Debug - Tipo da resposta:', typeof agendamentos);
+        console.log('🔍 Debug - É array?', Array.isArray(agendamentos));
+        
+        // Verificar se é um array
+        if (!Array.isArray(agendamentos)) {
+          console.error('🔍 Debug - Resposta não é um array:', agendamentos);
+          this.servicosPagos = [];
+          this.cdr.detectChanges();
+          return;
+        }
+        
         console.log('🔍 Debug - Quantidade de agendamentos tentative:', agendamentos.length);
         
         // Converter para formato de serviços
@@ -702,6 +720,18 @@ export class ClienteAgendamentosComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.hasError = false;
     this.loadAgendamentos();
+    this.loadServicosPagos();
+  }
+
+  testarServicosPagos(): void {
+    console.log('🔍 Debug - ===== TESTE MANUAL SERVIÇOS PAGOS =====');
+    console.log('🔍 Debug - Usuário atual:', this.currentUser);
+    console.log('🔍 Debug - ID do usuário:', this.currentUser?.id);
+    console.log('🔍 Debug - Serviços pagos atuais:', this.servicosPagos);
+    console.log('🔍 Debug - Quantidade de serviços pagos:', this.servicosPagos.length);
+    
+    // Forçar recarregamento
+    this.loadServicosPagos();
   }
 
   // Método para debug

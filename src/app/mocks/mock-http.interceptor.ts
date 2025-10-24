@@ -42,6 +42,15 @@ export class MockHttpInterceptor implements HttpInterceptor {
       response$ = this.mockBackend.getProfile();
     }
 
+    // ===== AGENDAMENTOS (específicos primeiro) =====
+    else if (url.match(/\/agendamentos\/servicos-pagos\/\d+$/) && method === 'GET') {
+      const id = parseInt(url.split('/').pop() || '0');
+      console.log('🔧 MockInterceptor - ===== INTERCEPTANDO SERVIÇOS PAGOS =====');
+      console.log('🔧 MockInterceptor - URL:', url);
+      console.log('🔧 MockInterceptor - ID extraído:', id);
+      console.log('🔧 MockInterceptor - Chamando mockBackend.getServicosPagosNaoAgendados...');
+      response$ = this.mockBackend.getServicosPagosNaoAgendados(id);
+    }
     // ===== SERVIÇOS =====
     else if (url.includes('/servico') && method === 'GET') {
       const urlObj = new URL(url);
@@ -113,10 +122,6 @@ export class MockHttpInterceptor implements HttpInterceptor {
     } else if (url.match(/\/agendamentos\/profissional\/\d+$/) && method === 'GET') {
       const id = parseInt(url.split('/').pop() || '0');
       response$ = this.mockBackend.getAgendamentosProfissional(id);
-    } else if (url.match(/\/agendamentos\/servicos-pagos\/\d+$/) && method === 'GET') {
-      const id = parseInt(url.split('/').pop() || '0');
-      console.log('🔧 MockInterceptor - Interceptando chamada para serviços pagos:', url, 'ID:', id);
-      response$ = this.mockBackend.getServicosPagosNaoAgendados(id);
     } else if (url.includes('/agendamentos') && method === 'POST') {
       response$ = this.mockBackend.criarAgendamentoCompleto(body);
     } else if (url.match(/\/agendamentos\/\d+\/confirmar$/) && method === 'PATCH') {
