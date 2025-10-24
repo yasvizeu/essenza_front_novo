@@ -48,7 +48,7 @@ export class MockHttpInterceptor implements HttpInterceptor {
       console.log('🔧 MockInterceptor - ===== INTERCEPTANDO SERVIÇOS PAGOS =====');
       console.log('🔧 MockInterceptor - URL:', url);
       console.log('🔧 MockInterceptor - ID extraído:', id);
-      console.log('🔧 MockInterceptor - Chamando mockBackend.getServicosPagosNaoAgendados...');
+      console.log('🔧 MockInterceptor - Chamando this.mockBackend.getServicosPagosNaoAgendados...');
       response$ = this.mockBackend.getServicosPagosNaoAgendados(id);
     }
     // ===== SERVIÇOS =====
@@ -278,9 +278,6 @@ export const mockBackendInterceptor: HttpInterceptorFn = (req, next) => {
   } else if (url.match(/\/agendamentos\/profissional\/\d+$/) && method === 'GET') {
     const id = parseInt(url.split('/').pop() || '0');
     response$ = mockBackend.getAgendamentosProfissional(id);
-  } else if (url.match(/\/agendamentos\/servicos-pagos\/\d+$/) && method === 'GET') {
-    const id = parseInt(url.split('/').pop() || '0');
-    response$ = mockBackend.getServicosPagosNaoAgendados(id);
   } else if (url.includes('/agendamentos') && method === 'POST') {
     response$ = mockBackend.criarAgendamentoCompleto(body as any);
   } else if (url.match(/\/agendamentos\/\d+\/confirmar$/) && method === 'PATCH') {
