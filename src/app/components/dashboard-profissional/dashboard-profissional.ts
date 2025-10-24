@@ -102,11 +102,15 @@ export class DashboardProfissionalComponent implements OnInit {
 
   // Verificar autenticação
   private checkAuth(): void {
+    console.log('🔍 Debug - ===== VERIFICANDO AUTENTICAÇÃO PROFISSIONAL =====');
     if (!this.authService.isAuthenticated() || !this.authService.isProfissional()) {
+      console.log('🔍 Debug - Usuário não autenticado ou não é profissional');
       this.router.navigate(['/login']);
       return;
     }
     this.currentUser = this.authService.getCurrentUser();
+    console.log('🔍 Debug - Profissional logado:', this.currentUser);
+    console.log('🔍 Debug - ID do profissional:', this.currentUser?.id);
   }
 
   // Inicializar formulários
@@ -576,8 +580,10 @@ export class DashboardProfissionalComponent implements OnInit {
 
   // Carregar agendamentos do profissional
   loadAgendamentos(): Promise<void> {
-    console.log('🔍 Debug - Carregando agendamentos...');
+    console.log('🔍 Debug - ===== CARREGANDO AGENDAMENTOS PROFISSIONAL =====');
+    console.log('🔍 Debug - Profissional ID:', this.currentUser?.id);
     if (!this.currentUser?.id) {
+      console.log('🔍 Debug - Usuário não encontrado');
       return Promise.resolve();
     }
 
@@ -585,9 +591,11 @@ export class DashboardProfissionalComponent implements OnInit {
     return this.agendamentosService.getAgendamentosProfissional(this.currentUser.id).toPromise()
       .then(agendamentos => {
         console.log('🔍 Debug - Agendamentos carregados:', agendamentos);
+        console.log('🔍 Debug - Quantidade de agendamentos:', agendamentos?.length || 0);
         this.agendamentos = this.agendamentosService.ordenarPorData(agendamentos || [], true);
         this.aplicarFiltrosAgendamentos();
         this.calcularEstatisticasAgenda();
+        console.log('🔍 Debug - ===== FIM CARREGAMENTO AGENDAMENTOS =====');
       })
       .catch(error => {
         console.error('Erro ao carregar agendamentos:', error);
@@ -602,6 +610,12 @@ export class DashboardProfissionalComponent implements OnInit {
   // Abrir modal de agendamentos
   openModalAgendamentos(): void {
     this.showModalAgendamentos = true;
+    this.loadAgendamentos();
+  }
+
+  // Forçar atualização dos agendamentos
+  refreshAgendamentos(): void {
+    console.log('🔍 Debug - ===== FORÇANDO ATUALIZAÇÃO AGENDAMENTOS =====');
     this.loadAgendamentos();
   }
 

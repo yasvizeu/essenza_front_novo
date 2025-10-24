@@ -378,9 +378,28 @@ export class MockBackendService {
   }
 
   getAgendamentosProfissional(profissionalId: number): Observable<MockAgendamento[]> {
-    console.log('🔧 MockBackend - Get agendamentos profissional:', profissionalId);
+    console.log('🔧 MockBackend - ===== GET AGENDAMENTOS PROFISSIONAL =====');
+    console.log('🔧 MockBackend - Profissional ID:', profissionalId);
+    console.log('🔧 MockBackend - Total de agendamentos:', this.agendamentos.length);
+    console.log('🔧 MockBackend - Todos os agendamentos:', this.agendamentos.map(a => ({
+      id: a.id,
+      profissionalId: a.profissionalId,
+      status: a.status,
+      servicoId: a.servicoId,
+      startDateTime: a.startDateTime
+    })));
     
     const agendamentosProfissional = this.agendamentos.filter(a => a.profissionalId === profissionalId);
+    console.log('🔧 MockBackend - Agendamentos filtrados para profissional:', agendamentosProfissional.length);
+    console.log('🔧 MockBackend - Agendamentos do profissional:', agendamentosProfissional.map(a => ({
+      id: a.id,
+      profissionalId: a.profissionalId,
+      status: a.status,
+      servicoId: a.servicoId,
+      startDateTime: a.startDateTime
+    })));
+    console.log('🔧 MockBackend - ===== FIM GET AGENDAMENTOS PROFISSIONAL =====');
+    
     return of(agendamentosProfissional).pipe(delay(300));
   }
 
