@@ -5,7 +5,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { AuthService } from './services/auth';
-import { mockBackendInterceptor } from './mocks/mock-interceptor';
+import { mockBackendInterceptor } from './mocks/mock-http.interceptor';
 
 // Interceptor funcional
 export const authInterceptor: HttpInterceptorFn = (req, next) => {

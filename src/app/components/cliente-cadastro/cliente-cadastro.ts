@@ -35,7 +35,7 @@ export class ClienteCadastroComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8), this.passwordStrengthValidator]], // Mudado de 'senha' para 'password'
       confirmPassword: ['', [Validators.required]],
-      cpf: ['', [Validators.required, this.cpfValidator]],
+      cpf: ['', [Validators.required, ClienteCadastroComponent.cpfValidatorStatic]],
       birthDate: ['', [Validators.required, this.birthDateValidator]],
       cell: ['', [Validators.required, this.cellValidator]],
       address: ['', [Validators.required, Validators.minLength(10), this.addressValidator]]
@@ -103,9 +103,73 @@ export class ClienteCadastroComponent implements OnInit {
 
     const cleanCpf = cpf.replace(/\D/g, '');
     if (cleanCpf.length !== 11) return { cpfInvalidLength: true };
-    if (!this.clienteService.validarCPF(cpf)) return { cpfInvalid: true };
+    
+    // Validação básica de CPF
+    if (!this.validarCPFBasico(cpf)) return { cpfInvalid: true };
 
     return null;
+  }
+
+  // Validação básica de CPF
+  private validarCPFBasico(cpf: string): boolean {
+    const cleanCpf = cpf.replace(/\D/g, '');
+    
+    if (cleanCpf.length !== 11) return false;
+    if (/^(\d)\1+$/.test(cleanCpf)) return false;
+
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+      soma += parseInt(cleanCpf.charAt(i)) * (10 - i);
+    }
+    let resto = 11 - (soma % 11);
+    let dv1 = resto < 2 ? 0 : resto;
+
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+      soma += parseInt(cleanCpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    let dv2 = resto < 2 ? 0 : resto;
+
+    return parseInt(cleanCpf.charAt(9)) === dv1 && parseInt(cleanCpf.charAt(10)) === dv2;
+  }
+
+  // Validador estático de CPF para usar no FormBuilder
+  static cpfValidatorStatic(control: AbstractControl): { [key: string]: any } | null {
+    const cpf = control.value;
+    if (!cpf) return null;
+
+    const cleanCpf = cpf.replace(/\D/g, '');
+    if (cleanCpf.length !== 11) return { cpfInvalidLength: true };
+    
+    // Validação básica de CPF
+    if (!ClienteCadastroComponent.validarCPFBasicoStatic(cpf)) return { cpfInvalid: true };
+
+    return null;
+  }
+
+  // Validação básica de CPF estática
+  private static validarCPFBasicoStatic(cpf: string): boolean {
+    const cleanCpf = cpf.replace(/\D/g, '');
+    
+    if (cleanCpf.length !== 11) return false;
+    if (/^(\d)\1+$/.test(cleanCpf)) return false;
+
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+      soma += parseInt(cleanCpf.charAt(i)) * (10 - i);
+    }
+    let resto = 11 - (soma % 11);
+    let dv1 = resto < 2 ? 0 : resto;
+
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+      soma += parseInt(cleanCpf.charAt(i)) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    let dv2 = resto < 2 ? 0 : resto;
+
+    return parseInt(cleanCpf.charAt(9)) === dv1 && parseInt(cleanCpf.charAt(10)) === dv2;
   }
 
   // Validador de data de nascimento

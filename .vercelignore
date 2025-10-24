@@ -1,0 +1,16 @@
+node_modules
+.git
+.angular
+dist
+*.log
+.env
+.env.local
+.env.production
+.env.development
+coverage
+.nyc_output
+.vscode
+.idea
+*.swp
+*.swo
+*~

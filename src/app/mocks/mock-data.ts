@@ -7,6 +7,7 @@ export interface MockUser {
   id: number;
   email: string;
   nome: string;
+  senha?: string;
   tipo: UserTipo;
   cpf?: string;
   birthDate?: string;
@@ -55,7 +56,7 @@ export interface MockAgendamento {
   clienteId: number;
   profissionalId: number;
   servico?: { id: number; nome: string; descricao: string; preco: number };
-  cliente?: { id: number; nome: string; email: string; cell: string };
+  cliente?: { id: number; nome: string; email: string; cell?: string };
   profissional?: { id: number; nome: string; email: string };
   statusPagamento?: 'pendente' | 'pago' | 'cancelado';
   observacoes?: string;
@@ -69,6 +70,8 @@ export interface MockFichaAnamnese {
   allergies: string;
   surgeries: string;
   lifestyle: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const mockClientes: MockUser[] = [

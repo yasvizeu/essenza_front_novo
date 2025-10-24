@@ -105,7 +105,8 @@ export class AuthService {
 
   // Login de cliente
   loginCliente(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
+    const loginData = { ...credentials, userType: 'cliente' };
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, loginData).pipe(
       tap(response => this.handleLoginSuccess(response)),
       catchError(error => this.handleLoginError(error))
     );
@@ -113,7 +114,8 @@ export class AuthService {
 
   // Login de profissional
   loginProfissional(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login-profissional`, credentials).pipe(
+    const loginData = { ...credentials, userType: 'profissional' };
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, loginData).pipe(
       tap(response => this.handleLoginSuccess(response)),
       catchError(error => this.handleLoginError(error))
     );

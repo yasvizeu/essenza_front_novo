@@ -28,7 +28,9 @@ export class ClienteHomeComponent implements OnInit, OnDestroy {
   proximosAgendamentos: any[] = [];
   historicoRecente: any[] = [];
   servicosFavoritos: Servico[] = [];
+  servicosRecomendados: Servico[] = [];
   pedidosPendentes: any[] = [];
+  historicoCompras: any[] = [];
 
   // Modal de agendamento
   showAgendamentoModal = false;
@@ -86,6 +88,8 @@ export class ClienteHomeComponent implements OnInit, OnDestroy {
     this.loadProximosAgendamentos();
     this.loadHistoricoRecente();
     this.loadPedidosPendentes();
+    this.loadHistoricoCompras();
+    this.gerarRecomendacoes();
   }
 
   private loadProximosAgendamentos(): void {
